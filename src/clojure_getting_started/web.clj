@@ -14,26 +14,25 @@
    :headers {"Content-Type" "text/plain"}
    :body (generate-string ["foo" :from 'Heroku])})
 
-
-(defn contribs []
-  (let [{:keys [status headers body error] :as resp} @(http/get "http://sanfrancisco.kapeli.com/feeds/zzz/user_contributed/build/index.json")
-        packages (packages body)
-        ]
-   {:status 200
-    :headers {"Content-Type" "text/plain"}
-    :body packages
-    }))
-
 (defn packages [json-pkgs]
   (let [docsets (:docsets (parse-string json-pkgs true))
         url "http://newyork.kapeli.com/feeds/zzz/user_contributed/build/%s/%s"
-        docs (map (fn [x] (select-keys x [:name :archive]))
-                  (map #(get docsets %1)
-                       (keys docsets)))]
-    (generate-string
-     (map #(assoc-in %1 [:archive]
-                     (format url (:name %1) (:archive %1)))
-          docs))))
+        archives (map (fn [x] {:archive (format url (name x) (:archive (get docsets x)) )
+                              :name (:name (get docsets x))
+                              })
+                      (keys docsets))]
+    (generate-string archives)))
+
+(defn contribs []
+  (let [{:keys [status headers body error] :as resp} @(http/get "http://sanfrancisco.kapeli.com/feeds/zzz/user_contributed/build/index.json")
+        packs (packages body)
+        ]
+   {:status 200
+    :headers {"Content-Type" "text/plain"}
+    :body packs
+    }))
+
+
 
 (defroutes app
   (GET "/" []
