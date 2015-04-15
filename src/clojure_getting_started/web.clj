@@ -9,6 +9,9 @@
             [ring.adapter.jetty :as jetty]
             [environ.core :refer [env]]))
 
+(def server1-conn {:pool {} :spec {}}) ; See `wcar` docstring for opts
+(defmacro wcar* [& body] `(car/wcar server1-conn ~@body))
+
 (defn splash []
   {:status 200
    :headers {"Content-Type" "text/plain"}
@@ -23,22 +26,31 @@
                       (keys docsets))]
     (generate-string archives)))
 
-(defn contribs []
-  (let [{:keys [status headers body error] :as resp} @(http/get "http://sanfrancisco.kapeli.com/feeds/zzz/user_contributed/build/index.json")
-        packs (packages body)
-        ]
-   {:status 200
-    :headers {"Content-Type" "text/plain"}
-    :body packs
-    }))
+(def json-redis-key "doc")
 
+(defn set-expire [k v exp]
+  (wcar* (car/set k v)
+         (car/expire k exp)
+         v))
+
+(defn get-json []
+  (let [redis-doc (or (wcar* (car/get json-redis-key))
+                      (let [{:keys [status headers body error] :as resp}
+                             @(http/get "http://sanfrancisco.kapeli.com/feeds/zzz/user_contributed/build/index.json")]
+                        (set-expire json-redis-key (packages body) 60)))]
+     redis-doc))
+
+(defn redis-get []
+  {:status 200
+   :headers {"Content-Type" "application/json"}
+   :body (get-json)})
 
 
 (defroutes app
   (GET "/" []
        (splash))
-  (GET "/contrib-docs" []
-         (contribs))
+  (GET "/redis-get" []
+       (redis-get))
   (ANY "*" []
        (route/not-found (slurp (io/resource "404.html")))))
 
