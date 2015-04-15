@@ -30,14 +30,14 @@
 
 (defn set-expire [k v exp]
   (wcar* (car/set k v)
-         (car/expire k exp)
-         v))
+         (car/expire k exp))
+  v)
 
 (defn get-json []
   (let [redis-doc (or (wcar* (car/get json-redis-key))
                       (let [{:keys [status headers body error] :as resp}
                              @(http/get "http://sanfrancisco.kapeli.com/feeds/zzz/user_contributed/build/index.json")]
-                        (set-expire json-redis-key (packages body) 60)))]
+                        (set-expire json-redis-key (packages body) 3600)))]
      redis-doc))
 
 (defn redis-get []
