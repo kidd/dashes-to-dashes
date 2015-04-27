@@ -6,10 +6,13 @@
             [org.httpkit.client :as http]
             [taoensso.carmine :as car :refer (wcar)]
             [clojure.java.io :as io]
+            [environ.core  :refer [env]]
             [ring.adapter.jetty :as jetty]
             [environ.core :refer [env]]))
 
-(def server1-conn {:pool {} :spec {}}) ; See `wcar` docstring for opts
+(def server1-conn {:pool {} :spec {:uri (env :REDISTOGO_URL)}}) ; See `wcar` docstring for opts
+
+
 (defmacro wcar* [& body] `(car/wcar server1-conn ~@body))
 
 (defn splash []
