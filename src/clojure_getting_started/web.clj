@@ -10,7 +10,7 @@
             [ring.adapter.jetty :as jetty]
             [environ.core :refer [env]]))
 
-(def server1-conn {:pool {} :spec {:uri (env :REDISTOGO_URL)}}) ; See `wcar` docstring for opts
+(def server1-conn {:pool {} :spec {:uri (env :redistogo-url)}}) ; See `wcar` docstring for opts
 
 
 (defmacro wcar* [& body] `(car/wcar server1-conn ~@body))
