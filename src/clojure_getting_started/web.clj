@@ -10,7 +10,7 @@
             [ring.adapter.jetty :as jetty]
             [environ.core :refer [env]]))
 
-(def server1-conn {:pool {} :spec {:uri (env :REDISTOGO_URL)}}) ; See `wcar` docstring for opts
+(def server1-conn {:pool {} :spec {:uri (env :redistogo_url)}}) ; See `wcar` docstring for opts
 
 
 (defmacro wcar* [& body] `(car/wcar server1-conn ~@body))
@@ -49,9 +49,20 @@
    :body (get-json)})
 
 
+(defn my-vars []
+  (generate-string {:redis_url (env :redistogo_url)
+                    :REDIS_URL_caps (env :REDISTOGO_URL)}))
+
+(defn print-things []
+  {:status 200
+   :headers {"Content-Type" "application/json"}
+   :body (my-vars)}  )
+
 (defroutes app
   (GET "/" []
        (splash))
+  (GET "/debug" []
+       (print-things))
   (GET "/redis-get" []
        (redis-get))
   (ANY "*" []
