@@ -10,9 +10,7 @@
             [ring.adapter.jetty :as jetty]
             [environ.core :refer [env]]))
 
-;(def server1-conn {:pool {} :spec {:uri (env :redistogo-url)}}) ; See `wcar` docstring for opts
-(def server1-conn {:pool {} :spec {:uri "redis://redistogo:49dd2c800775fe25df898c2771103220@mummichog.redistogo.com:10927/"}}) ; See `wcar` docstring for opts
-
+(def server1-conn {:pool {} :spec {:uri (env :redistogo-url)}}) ; See `wcar` docstring for opts
 
 (defmacro wcar* [& body] `(car/wcar server1-conn ~@body))
 
@@ -44,28 +42,16 @@
                         (set-expire json-redis-key (packages body) 3600)))]
      redis-doc))
 
-(defn redis-get []
+(defn docsets-contrib []
   {:status 200
    :headers {"Content-Type" "application/json"}
    :body (get-json)})
 
-
-(defn my-vars []
-  (generate-string {:redis_url (env :redistogo_url)
-                    :REDIS_URL_caps (env :REDISTOGO_URL)}))
-
-(defn print-things []
-  {:status 200
-   :headers {"Content-Type" "application/json"}
-   :body (my-vars)}  )
-
 (defroutes app
   (GET "/" []
        (splash))
-  (GET "/debug" []
-       (print-things))
-  (GET "/redis-get" []
-       (redis-get))
+  (GET "/docsets/contrib" []
+       (docsets-contrib))
   (ANY "*" []
        (route/not-found (slurp (io/resource "404.html")))))
 
